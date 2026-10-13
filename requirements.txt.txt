@@ -1,0 +1,5 @@
+firecrawl-py
+python-telegram-bot
+ccxt
+openai
+requests
