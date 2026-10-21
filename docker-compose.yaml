@@ -1,0 +1,19 @@
+services:
+  trading_bot:
+    container_name: telegram_crypto_bot
+    build: .
+    # اللوحة متاحة على localhost فقط افتراضياً (الأكثر أماناً). للوصول من الإنترنت ضع DASHBOARD_BIND=0.0.0.0 مع كلمة مرور
+    ports:
+      - "${DASHBOARD_BIND:-127.0.0.1}:8000:8000"
+    env_file:
+      - .env
+    environment:
+      - TZ=${TZ:-UTC}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

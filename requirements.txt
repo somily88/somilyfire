@@ -1,0 +1,4 @@
+ccxt
+apscheduler
+fastapi
+uvicorn

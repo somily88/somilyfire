@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="60">
+<title>لوحة تحكم بوت التداول</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050505;
+  --card: #141414;
+  --card-hi: #1b1b1b;
+  --line: #242424;
+  --text: #f5f5f5;
+  --muted: #8c8c8c;
+  --lime: #d4f53c;
+  --up: #d4f53c;
+  --down: #ff6b5e;
+  --bar: #2c2c2c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); }
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  min-height: 100vh;
+  padding: 28px;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+.shell { max-width: 1320px; margin: 0 auto; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 36px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+.logo { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+.logo i { font-style: normal; color: var(--lime); }
+.nav-item { font-size: 15px; font-weight: 500; }
+.top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 14px; border-radius: 12px;
+  background: var(--card); border: 1px solid var(--line);
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+}
+.pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.pill-on::before { background: var(--lime); box-shadow: 0 0 8px var(--lime); }
+.pill-off::before { background: #e8a33d; }
+.btn-scan {
+  height: 36px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--lime);
+  background: transparent; color: var(--lime); font-size: 13px; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; transition: background .15s, color .15s;
+}
+.btn-scan:hover { background: var(--lime); color: #000; }
+
+/* ---------- layout ---------- */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 36px; align-items: start; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.flat { color: var(--muted); }
+small { color: var(--muted); font-size: 12px; font-weight: 400; }
+
+/* ---------- wallet ---------- */
+.wallet-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+.wallet-label { font-size: 20px; color: var(--muted); margin-bottom: 6px; }
+.wallet-value { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.wallet-value h1 { font-size: clamp(44px, 6vw, 68px); font-weight: 500; letter-spacing: -0.035em; line-height: 1; }
+.change { font-size: 18px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.change.up, .change.down { }
+.ranges { display: flex; gap: 8px; flex-wrap: wrap; }
+.range {
+  min-width: 44px; height: 34px; padding: 0 12px; border-radius: 10px; cursor: pointer;
+  background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 13px; font-weight: 500;
+}
+.range:hover { color: var(--text); }
+.range.active { border-color: var(--lime); color: var(--text); }
+
+/* ---------- chart ---------- */
+.chart-card { background: var(--card); border-radius: 22px; padding: 0; position: relative; height: 380px; overflow: hidden; margin-bottom: 16px; }
+#chart { position: absolute; inset: 0; touch-action: pan-y; }
+#chart svg { display: block; width: 100%; height: 100%; }
+.chart-empty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.tip {
+  position: absolute; top: 14px; pointer-events: none; display: none;
+  font-size: 22px; font-weight: 500; white-space: nowrap; transform: translateX(-50%);
+}
+.tip small { display: block; text-align: center; margin-top: 2px; direction: rtl; unicode-bidi: plaintext; }
+
+/* ---------- stat cards ---------- */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
+.stat { background: var(--card); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+.stat > small { display: block; margin-bottom: 10px; }
+.stat b { display: block; font-size: 22px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 8px; }
+.stat .sub { font-size: 12px; color: var(--muted); }
+
+/* ---------- markets ---------- */
+.section-title { font-size: 22px; font-weight: 500; margin-bottom: 14px; letter-spacing: -0.01em; }
+.markets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.mkt { background: var(--card); border-radius: 18px; padding: 18px; }
+.mkt-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.mkt-title { flex: 1; min-width: 0; }
+.mkt-title b { display: block; font-size: 15px; font-weight: 600; }
+.mkt .pill { height: 30px; font-size: 12px; padding: 0 11px; }
+.mkt-price { font-size: 30px; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 16px; }
+.mkt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
+.mkt-grid small { display: block; margin-bottom: 4px; }
+.mkt-grid b { font-size: 15px; font-weight: 500; }
+
+
+/* ---------- news ---------- */
+.news-card { background: var(--card); border-radius: 18px; padding: 18px; }
+.news-head { margin-bottom: 14px; }
+.news-head .pill { height: 30px; font-size: 12px; padding: 0 11px; }
+.news-reason { font-size: 14px; line-height: 1.7; margin-bottom: 12px; }
+.news-list { list-style: none; border-top: 1px solid var(--line); padding-top: 12px; margin-bottom: 12px; display: grid; gap: 8px; }
+.news-list li { font-size: 13px; line-height: 1.5; color: #d0d0d0; }
+
+/* ---------- coin ---------- */
+.coin {
+  width: 38px; height: 38px; border-radius: 50%; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px; font-weight: 700;
+}
+
+/* ---------- right column ---------- */
+.risk { margin-bottom: 34px; }
+.risk-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.risk h2 { font-size: 30px; font-weight: 500; line-height: 1.08; letter-spacing: -0.025em; }
+.risk-note { text-align: end; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.meter { margin-top: 20px; height: 34px; border-radius: 4px; position: relative; overflow: hidden;
+  background: repeating-linear-gradient(90deg, #2a2a2a 0 1.5px, transparent 1.5px 5px); }
+.meter-fill { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--lime); border-start-start-radius: 4px; border-end-start-radius: 4px; min-width: 4px; width: [[exposure_pct]]%; }
+.meter-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.risk-text { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.risk-text b { color: var(--text); font-weight: 600; }
+
+.tx-head-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.tx-head-row h3 { font-size: 17px; font-weight: 500; }
+.tx-head-row span { font-size: 14px; color: var(--lime); }
+.txs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tx { background: var(--card); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 22px; min-height: 172px; }
+.tx-head { display: flex; align-items: center; gap: 10px; }
+.tx-head b { display: block; font-size: 13px; font-weight: 500; }
+.tx-head small { font-size: 11px; }
+.tx-body { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.tx-sym { font-size: 12px; font-weight: 600; }
+.tx-val { font-size: 24px; font-weight: 500; letter-spacing: -0.02em; }
+.tx-sub { font-size: 11px; color: var(--muted); line-height: 1.35; }
+.tx-status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.tx-status::before { content: ''; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; }
+.tx-status.win { color: var(--up); }
+.tx-status.loss { color: var(--down); }
+.tx-status.open { color: #e8a33d; }
+.tx.hl { background: var(--lime); color: #000; }
+.tx.hl small, .tx.hl .tx-sub, .tx.hl .tx-status { color: rgba(0,0,0,.65); }
+.tx.hl .tx-val { color: #000; }
+.empty { grid-column: 1 / -1; background: var(--card); border-radius: 18px; padding: 22px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: 1fr; gap: 30px; }
+}
+@media (max-width: 720px) {
+  body { padding: 16px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .chart-card { height: 300px; }
+  .txs { grid-template-columns: 1fr; }
+  .wallet-label { font-size: 17px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo" dir="ltr">crypto<i>bot</i></div>
+      <span class="nav-item">لوحة التحكم</span>
+    </div>
+    <div class="top-actions">
+      <span class="pill pill-on" dir="ltr">[[env_label]]</span>
+      <span class="pill [[mode_class]]">[[mode_label]]، [[trade_amount]] للصفقة</span>
+      <a class="btn-scan" href="/check">افحص السوق الآن</a>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- left column -->
+    <main>
+      <div class="wallet-row">
+        <div>
+          <div class="wallet-label">قيمة المحفظة</div>
+          <div class="wallet-value">
+            <h1>[[wallet_value]]</h1>
+            <span class="change flat" id="change" dir="ltr"></span>
+          </div>
+        </div>
+        <div class="ranges" id="ranges" role="group" aria-label="المدى الزمني للرسم">
+          <button class="range" data-r="1h">ساعة</button>
+          <button class="range" data-r="8h">8 ساعات</button>
+          <button class="range" data-r="1d">يوم</button>
+          <button class="range" data-r="1w">أسبوع</button>
+          <button class="range" data-r="1m">شهر</button>
+          <button class="range" data-r="all">الكل</button>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div id="chart" dir="ltr"></div>
+        <div class="chart-empty" id="chart-empty">جاري جمع البيانات.<br>يمتلئ الرسم تلقائياً مع كل فحص للسوق (كل دقيقة).</div>
+        <div class="tip" id="tip" dir="ltr"></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <small>الربح المحقق</small>
+          <b class="[[realized_cls]]">[[realized_pl]]</b>
+          <span class="sub">[[realized_sub]]</span>
+        </div>
+        <div class="stat">
+          <small>الربح غير المحقق</small>
+          <b class="[[unrealized_cls]]">[[unrealized_pl]]</b>
+          <span class="sub">[[unrealized_sub]]</span>
+        </div>
+        <div class="stat">
+          <small>نسبة النجاح</small>
+          <b>[[win_rate]]</b>
+          <span class="sub">[[win_sub]]</span>
+        </div>
+        <div class="stat">
+          <small>الصفقات المغلقة</small>
+          <b>[[trades_total]]</b>
+          <span class="sub">[[trades_sub]]</span>
+        </div>
+      </div>
+
+      <h2 class="section-title">مراقبة السوق</h2>
+      <div class="markets">[[market_cards]]</div>
+
+      <h2 class="section-title" style="margin-top:36px">الأخبار</h2>
+      [[news_card]]
+    </main>
+
+    <!-- right column -->
+    <aside>
+      <section class="risk">
+        <div class="risk-head">
+          <h2>تعرّض<br>المحفظة</h2>
+          <div class="risk-note">المتاح<br><b style="color:var(--text);font-weight:600">[[free_usdt]]</b></div>
+        </div>
+        <div class="meter" role="img" aria-label="[[exposure_pct]] بالمئة من المحفظة في صفقات مفتوحة">
+          <div class="meter-fill"></div>
+        </div>
+        <div class="meter-legend"><span>منخفض</span><span>مرتفع</span></div>
+        <p class="risk-text"><b><bdi>[[exposure_pct]]%</bdi></b> من المحفظة في صفقات مفتوحة. [[exposure_note]].</p>
+      </section>
+
+      <section>
+        <div class="tx-head-row">
+          <h3>الصفقات</h3>
+          <span>[[open_count]] مفتوحة</span>
+        </div>
+        <div class="txs">[[tx_cards]]</div>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function () {
+  var chartEl = document.getElementById('chart');
+  var emptyEl = document.getElementById('chart-empty');
+  var tipEl = document.getElementById('tip');
+  var changeEl = document.getElementById('change');
+  var buttons = document.querySelectorAll('.range');
+  var range = '1d';
+  try { range = localStorage.getItem('range') || '1d'; } catch (e) {}
+  var data = [];
+
+  function money(v) {
+    return '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function signed(v) { return (v >= 0 ? '+' : '-') + money(Math.abs(v)); }
+  function hash(i) { var x = Math.sin(i * 12.9898) * 43758.5453; return x - Math.floor(x); }
+  function fmtTime(ts, withDate) {
+    var d = new Date(ts * 1000);
+    var t = d.toLocaleTimeString('ar-u-nu-latn', { hour: 'numeric', minute: '2-digit' });
+    if (!withDate) return t;
+    return d.toLocaleDateString('ar-u-nu-latn-ca-gregory', { month: 'short', day: 'numeric' }) + ' ' + t;
+  }
+
+  function setActive() {
+    buttons.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-r') === range); });
+  }
+
+  function updateChange() {
+    if (data.length < 2) { changeEl.textContent = ''; return; }
+    var first = data[0].v, last = data[data.length - 1].v;
+    var pct = first ? (last - first) / first * 100 : 0;
+    changeEl.className = 'change ' + (pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat');
+    changeEl.textContent = (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(pct).toFixed(2) + '%';
+  }
+
+  function draw() {
+    updateChange();
+    chartEl.innerHTML = '';
+    tipEl.style.display = 'none';
+    if (data.length < 2) { emptyEl.style.display = 'flex'; return; }
+    emptyEl.style.display = 'none';
+
+    var w = chartEl.clientWidth, h = chartEl.clientHeight;
+    var padTop = 64, padBottom = 44;
+    var plotH = h - padTop - padBottom;
+    var vals = data.map(function (p) { return p.v; });
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    if (max - min < 1e-9) { var m = max * 0.002 || 1; min -= m; max += m; }
+    var span = max - min;
+    min -= span * 0.12; max += span * 0.12; span = max - min;
+
+    var n = data.length;
+    var xs = data.map(function (_, i) { return i / (n - 1) * w; });
+    var ys = data.map(function (p) { return padTop + (1 - (p.v - min) / span) * plotH; });
+
+    // interpolate y at any x
+    function yAt(x) {
+      var f = x / w * (n - 1), i = Math.min(Math.floor(f), n - 2), t = f - i;
+      return ys[i] + (ys[i + 1] - ys[i]) * t;
+    }
+
+    var bars = '';
+    var step = 6, bottom = h - padBottom;
+    for (var x = 3, k = 0; x < w; x += step, k++) {
+      var y = yAt(x);
+      var top = Math.max(18, y - hash(k) * plotH * 0.45);
+      bars += '<line x1="' + x + '" x2="' + x + '" y1="' + top + '" y2="' + bottom + '" stroke="#2f2f2f" stroke-width="1.6"/>';
+    }
+
+    var path = xs.map(function (x, i) { return (i ? 'L' : 'M') + x.toFixed(1) + ' ' + ys[i].toFixed(1); }).join(' ');
+
+    var withDate = range === '1w' || range === '1m' || range === 'all';
+    var labels = '';
+    var cnt = w < 520 ? 3 : 6;
+    for (var j = 0; j < cnt; j++) {
+      var idx = Math.round(j / (cnt - 1) * (n - 1));
+      var anchor = j === 0 ? 'start' : (j === cnt - 1 ? 'end' : 'middle');
+      var lx = j === 0 ? 16 : (j === cnt - 1 ? w - 16 : xs[idx]);
+      labels += '<text x="' + lx + '" y="' + (h - 16) + '" fill="#8c8c8c" font-size="13" text-anchor="' + anchor + '">' +
+        fmtTime(data[idx].t, withDate) + '</text>';
+    }
+
+    chartEl.innerHTML =
+      '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img" aria-label="قيمة المحفظة عبر الزمن">' +
+      bars +
+      '<path d="' + path + '" fill="none" stroke="#d4f53c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<g id="hover" style="display:none">' +
+      '<line id="hv" y1="0" y2="' + (h - padBottom) + '" stroke="#fff" stroke-width="1.5" opacity=".85"/>' +
+      '<circle id="hc" r="7" fill="#050505" stroke="#d4f53c" stroke-width="3.5"/></g>' +
+      labels + '</svg>';
+
+    var svg = chartEl.querySelector('svg');
+    var hover = svg.querySelector('#hover'), hv = svg.querySelector('#hv'), hc = svg.querySelector('#hc');
+
+    function show(clientX) {
+      var rect = svg.getBoundingClientRect();
+      var x = (clientX - rect.left) / rect.width * w;
+      var i = Math.max(0, Math.min(n - 1, Math.round(x / w * (n - 1))));
+      hover.style.display = '';
+      hv.setAttribute('x1', xs[i]); hv.setAttribute('x2', xs[i]);
+      hc.setAttribute('cx', xs[i]); hc.setAttribute('cy', ys[i]);
+      var delta = data[i].v - data[0].v;
+      tipEl.style.display = 'block';
+      var tx = Math.max(70, Math.min(w - 70, xs[i]));
+      tipEl.style.left = (tx / w * rect.width) + 'px';
+      tipEl.innerHTML = '<span class="' + (delta >= 0 ? 'up' : 'down') + '">' + signed(delta) + '</span>' +
+        '<small><bdi>' + money(data[i].v) + '</bdi><br>' + fmtTime(data[i].t, true) + '</small>';
+    }
+    function hide() { hover.style.display = 'none'; tipEl.style.display = 'none'; }
+    svg.addEventListener('pointermove', function (e) { show(e.clientX); });
+    svg.addEventListener('pointerdown', function (e) { show(e.clientX); });
+    svg.addEventListener('pointerleave', hide);
+  }
+
+  function load() {
+    fetch('/api/equity?range=' + encodeURIComponent(range))
+      .then(function (r) { return r.json(); })
+      .then(function (d) { data = Array.isArray(d) ? d : []; draw(); })
+      .catch(function () { data = []; draw(); });
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      range = b.getAttribute('data-r');
+      try { localStorage.setItem('range', range); } catch (e) {}
+      setActive(); load();
+    });
+  });
+
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(draw, 120);
+  });
+
+  setActive();
+  load();
+})();
+</script>
+</body>
+</html>
